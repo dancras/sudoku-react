@@ -1,4 +1,4 @@
-/* eslint indent: ["error", 2] */
+/* eslint @typescript-eslint/indent: ["error", 2] */
 import type { InitialOptionsTsJest } from 'ts-jest/dist/types';
 
 const jestConfig: InitialOptionsTsJest = {
@@ -6,7 +6,8 @@ const jestConfig: InitialOptionsTsJest = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['./setupTests.ts'],
   moduleNameMapper: {
-    'src/(.*)': '<rootDir>/src/$1'
+    'css$': 'identity-obj-proxy',
+    'src/(.*)': '<rootDir>/src/$1',
   },
 };
 

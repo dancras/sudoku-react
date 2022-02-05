@@ -1,0 +1,29 @@
+.NumberPicker {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+}
+.NumberPicker .--Values {
+  grid-row: 1;
+  grid-column: 1;
+  display: contents;
+}
+.NumberPicker .--Values li {
+  grid-row: 1;
+  text-align: center;
+  grid-column: var(--value) / var(--value);
+}
+.NumberPicker .--Selection {
+  grid-row: 1;
+  grid-column: 1 / -1;
+}
+.NumberPicker .--Selection:before {
+  --cell-width: 100% / 9;
+  content: "";
+  display: block;
+  width: calc(var(--cell-width));
+  margin-left: calc(var(--cell-width) * (var(--selected) - 1));
+  transition: margin 700ms;
+  height: 100%;
+  background-color: aqua;
+  border-radius: 5px;
+}

@@ -21,10 +21,17 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "indent": ["error", 4],
+        "indent": "off",
+        "@typescript-eslint/indent": ["error", 4, {
+          "ignoredNodes": ["JSXAttribute"]
+        }],
         "linebreak-style": ["error", "unix"],
         "quotes": ["error", "single"],
         "semi": ["error", "always"],
-        "react/react-in-jsx-scope": "off"
+        "react/react-in-jsx-scope": "off",
+        "react/jsx-indent-props": ["error", "first"],
+        "no-restricted-imports": ["error", {
+          "patterns": [".*"]
+        }]
     }
 }
