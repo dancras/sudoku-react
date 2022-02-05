@@ -1,6 +1,6 @@
 import { createContext, useState } from 'react';
+import { ReactState } from 'src/State/UtilityTypes';
 
-type ReactState<T> = [T, React.Dispatch<React.SetStateAction<T>>] ;
 export type SelectedNumberState = ReactState<number>;
 
 export const SelectedNumberContext = createContext<SelectedNumberState>([0, () => void(0)]);

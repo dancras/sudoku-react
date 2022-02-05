@@ -77,7 +77,7 @@ select {
 }
 
 /* App container */
-.Sudoku {
+.SudokuReact {
   max-width: 80vh;
   margin: 0 auto;
 }

@@ -8,7 +8,7 @@ test('the selected number is shared via a context', function () {
     function ExampleConsumer() {
         const [selectedNumber, setter] = useContext(SelectedNumberContext);
         setSelectedNumber = setter;
-        return <div>example {selectedNumber}</div>;
+        return <div>{selectedNumber}</div>;
     }
 
     render(
@@ -17,9 +17,11 @@ test('the selected number is shared via a context', function () {
         </SelectedNumberProvider>
     );
 
+    expect(screen.getByText('1')).toBeInTheDocument();
+
     act(() => {
         setSelectedNumber(3);
     });
 
-    expect(screen.getByText('example 3')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
 });

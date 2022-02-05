@@ -1,0 +1,74 @@
+.SudokuGrid {
+  --black: #090909;
+
+  user-select: none;
+
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+
+  border: 3px solid var(--black);
+}
+
+.SudokuGrid .--Cell > div {
+  flex: 1;
+}
+
+.SudokuGrid .--Cell.-ShowingCandidates .--Contents {
+  display: none;
+}
+
+.SudokuGrid .--Candidates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  height: 100%;
+  font-size: calc(1em / 3);
+}
+
+.SudokuGrid .--Candidate {
+  width: calc(100% / 3);
+  height: calc(100% / 3);
+}
+
+.SudokuGrid .--Cell.-ShowingContents .--Candidates {
+  display: none;
+}
+
+.SudokuGrid .--Candidate {
+  flex-basis: calc(100% / 3);
+}
+
+.SudokuGrid .--Cell {
+  display: flex;
+  align-items: center;
+
+  text-align: center;
+  border-right: 1px solid var(--black);
+  border-bottom: 1px solid var(--black);
+}
+
+.SudokuGrid .--Cell::before {
+  content: "";
+  padding-bottom: 100%;
+  width: 0px;
+}
+
+.SudokuGrid .--Cell:nth-child(3n) {
+  border-right: 2px solid var(--black);
+}
+
+.SudokuGrid .--Cell:nth-child(9n) {
+  border-right: none;
+}
+
+.SudokuGrid .--Cell:nth-child(n + 19):nth-child(-n + 27) {
+  border-bottom: 2px solid var(--black);
+}
+
+.SudokuGrid .--Cell:nth-child(n + 46):nth-child(-n + 54) {
+  border-bottom: 2px solid var(--black);
+}
+
+.SudokuGrid .--Cell:nth-child(n + 73) {
+  border-bottom: none;
+}
