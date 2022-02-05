@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import produce from 'immer';
 import { emptyGridContents, GridContents, GridContentsContext, GridContentsProvider, GridContentsReducer, GridContentsUpdate } from 'src/State/GridContents';
-import { SelectedNumberContext, SelectedNumberProvider, SelectedNumberState } from 'src/State/SelectedNumber';
+import { SelectedNumberContext, SelectedNumberProvider } from 'src/State/SelectedNumber';
 import SudokuGrid from 'src/Sudoku/SudokuGrid';
 import { createTestProvider } from 'src/Test/TestProvider';
 
@@ -26,25 +26,21 @@ beforeEach(() => {
         SelectedNumberContext,
         1
     );
+
+    render(
+        <TestSelectedNumberProvider>
+            <TestGridContentsProvider>
+                <SudokuGrid />
+            </TestGridContentsProvider>
+        </TestSelectedNumberProvider>
+    );
 });
 
 test('cells from GridContents context are rendered', () => {
-    render(
-        <TestGridContentsProvider>
-            <SudokuGrid />
-        </TestGridContentsProvider>
-    );
-
     expect(screen.getByTestId('sudoku-grid').children).toHaveLength(81);
 });
 
 test('cell contents display when set', () => {
-    render(
-        <TestGridContentsProvider>
-            <SudokuGrid />
-        </TestGridContentsProvider>
-    );
-
     setGridContents(produce(gridContents, (draft) => {
         draft[0].contents = 5;
         draft[1].contents = 8;
@@ -55,12 +51,6 @@ test('cell contents display when set', () => {
 });
 
 test('cell has -ShowingContents class when it has contents to show', () => {
-    render(
-        <TestGridContentsProvider>
-            <SudokuGrid />
-        </TestGridContentsProvider>
-    );
-
     const firstCell = screen.getByTestId('sudoku-grid').firstElementChild;
 
     expect(firstCell?.className).not.toContain('-ShowingContents');
@@ -73,14 +63,6 @@ test('cell has -ShowingContents class when it has contents to show', () => {
 });
 
 test('dispatches toggleContents on double click', () => {
-    render(
-        <TestSelectedNumberProvider>
-            <TestGridContentsProvider>
-                <SudokuGrid />
-            </TestGridContentsProvider>
-        </TestSelectedNumberProvider>
-    );
-
     const firstCell = screen.getByTestId('sudoku-grid').firstElementChild;
 
     setSelectedNumber(4);
@@ -95,12 +77,6 @@ test('dispatches toggleContents on double click', () => {
 });
 
 test('cell candidates display when set', () => {
-    render(
-        <TestGridContentsProvider>
-            <SudokuGrid />
-        </TestGridContentsProvider>
-    );
-
     setGridContents(produce(gridContents, (draft) => {
         draft[0].candidates[1] = true;
         draft[0].candidates[9] = true;
@@ -112,12 +88,6 @@ test('cell candidates display when set', () => {
 });
 
 test('cell has -ShowingCandidates class when it has no contents to show', () => {
-    render(
-        <TestGridContentsProvider>
-            <SudokuGrid />
-        </TestGridContentsProvider>
-    );
-
     const firstCell = screen.getByTestId('sudoku-grid').firstElementChild;
 
     expect(firstCell?.className).toContain('-ShowingCandidates');
@@ -130,14 +100,6 @@ test('cell has -ShowingCandidates class when it has no contents to show', () => 
 });
 
 test('dispatches toggleCandidate on single click', () => {
-    render(
-        <TestSelectedNumberProvider>
-            <TestGridContentsProvider>
-                <SudokuGrid />
-            </TestGridContentsProvider>
-        </TestSelectedNumberProvider>
-    );
-
     const firstCell = screen.getByTestId('sudoku-grid').firstElementChild;
 
     setSelectedNumber(7);
@@ -150,32 +112,3 @@ test('dispatches toggleCandidate on single click', () => {
         candidate: 7
     } as GridContentsUpdate);
 });
-
-
-// return (
-//     <div class="SudokuGrid">
-//         <For each={cells}>
-//             {(cell) =>
-//                 <div class="--Cell"
-//                     classList={{
-//                         '-ShowingCandidates': !cell.contents(),
-//                         '-ShowingContents': !!cell.contents()
-//                     }}
-//                     onClick={() => cell.toggleCandidate(getSelectedNumber())}
-//                     onDblClick={() => cell.toggleContents(getSelectedNumber())}
-//                 >
-//                     <div class="--Candidates">
-//                         <For each={candidateIndexes}>
-//                             {(i) =>
-//                                 <div class="--Candidate">{ cell.candidates[i]() === null ? ' ' : i + 1 }</div>
-//                             }
-//                         </For>
-//                     </div>
-//                     <div class="--Contents">
-//                         {cell.contents() ? cell.contents()[0] : ''}
-//                     </div>
-//                 </div>
-//             }
-//         </For>
-//     </div>
-// );

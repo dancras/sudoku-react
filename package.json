@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "test": "jest --no-cache",
+    "test": "jest",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
