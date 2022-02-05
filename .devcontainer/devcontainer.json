@@ -1,0 +1,19 @@
+{
+    "name": "sudoku-react-dev",
+
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "sudoku-react-dev",
+    "workspaceFolder": "/app",
+
+    "extensions": [
+        "editorconfig.editorconfig",
+        "dbaeumer.vscode-eslint",
+    ],
+
+    // "forwardPorts": [],
+
+    // "postCreateCommand": "",
+    // "postStartCommand": "",
+
+    // "remoteUser": "vscode"
+}
