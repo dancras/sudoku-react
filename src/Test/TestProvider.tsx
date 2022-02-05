@@ -2,19 +2,20 @@ import React, { useCallback, useState } from 'react';
 import { act } from '@testing-library/react';
 import { ReactReducer } from 'src/State/UtilityTypes';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createTestProvider<R extends ReactReducer<any, any>>(Context: React.Context<R>, initialValue: R[0]): [typeof TestProvider, jest.MockedFunction<R[1]>, (v: R[0]) => void] {
     const updateSpy = jest.fn();
-    let setter: React.Dispatch<React.SetStateAction<R[0]>> = () => void(0);
+    let setStateValue: React.Dispatch<React.SetStateAction<R[0]>> = () => void(0);
 
-    function setStateValue(value: R[0]) {
+    function setStateValueInActBlock(value: R[0]) {
         act(() => {
-            setter(value);
+            setStateValue(value);
         });
     }
 
     function TestProvider({ children }: React.PropsWithChildren<unknown>) {
         const [value, setValue] = useState(initialValue);
-        setter = setValue;
+        setStateValue = setValue;
 
         const interceptUpdate: R[1] = useCallback((update) => {
             updateSpy(update);
@@ -27,5 +28,5 @@ export function createTestProvider<R extends ReactReducer<any, any>>(Context: Re
         );
     }
 
-    return [TestProvider, updateSpy, setStateValue];
+    return [TestProvider, updateSpy, setStateValueInActBlock];
 }
