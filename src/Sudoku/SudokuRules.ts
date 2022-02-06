@@ -24,19 +24,19 @@ function getColumnMembers(i: number) {
     return Array.from({ length: 9 }).map((x, i) => columnStart + i * 9);
 }
 
-function getBlockStart(i: number) {
-    return Math.floor(i / 27) + (i % 9) - (i % 3);
+export function getBlockStart(i: number) {
+    return (Math.floor(i / 27) * 27) + (i % 9) - (i % 3);
 }
 
-function getBlockIndex(i: number) {
+export function getBlockIndex(i: number) {
     const blockStart = getBlockStart(i);
 
     if (blockStart < 9) {
         return Math.floor(blockStart / 3);
     } else if (blockStart < 36) {
-        return Math.floor((blockStart - 27) / 3);
+        return Math.floor(3 + (blockStart - 27) / 3);
     } else {
-        return Math.floor((blockStart - 54) / 3);
+        return Math.floor(6 + (blockStart - 54) / 3);
     }
 }
 

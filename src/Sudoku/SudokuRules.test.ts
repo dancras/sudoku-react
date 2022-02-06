@@ -1,4 +1,4 @@
-import SudokuRules from 'src/Sudoku/SudokuRules';
+import SudokuRules, { getBlockStart, getBlockIndex } from 'src/Sudoku/SudokuRules';
 
 describe('setContents()', () => {
     test('returns all connected cell indexes for the updated cell', () => {
@@ -147,5 +147,28 @@ describe('isValidCandidate()', () => {
 
         expect(rules.isValidCandidate(14, 5)).toEqual(false);
         expect(rules.isValidCandidate(6, 6)).toEqual(false);
+    });
+});
+
+describe('block member calculations', () => {
+    test('block start is the top left member of any block', () => {
+        expect(getBlockStart(0)).toEqual(0);
+        expect(getBlockStart(20)).toEqual(0);
+        expect(getBlockStart(6)).toEqual(6);
+        expect(getBlockStart(26)).toEqual(6);
+        expect(getBlockStart(30)).toEqual(30);
+        expect(getBlockStart(50)).toEqual(30);
+    });
+
+    test('block index is calculated correctly', () => {
+        expect(getBlockIndex(0)).toEqual(0);
+        expect(getBlockIndex(3)).toEqual(1);
+        expect(getBlockIndex(6)).toEqual(2);
+        expect(getBlockIndex(27)).toEqual(3);
+        expect(getBlockIndex(30)).toEqual(4);
+        expect(getBlockIndex(33)).toEqual(5);
+        expect(getBlockIndex(54)).toEqual(6);
+        expect(getBlockIndex(57)).toEqual(7);
+        expect(getBlockIndex(60)).toEqual(8);
     });
 });
