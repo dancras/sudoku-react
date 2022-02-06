@@ -21,6 +21,10 @@
   display: none;
 }
 
+.SudokuGrid .--Contents {
+  font-size: 0.9em;
+}
+
 .SudokuGrid .--Candidates {
   display: flex;
   flex-wrap: wrap;

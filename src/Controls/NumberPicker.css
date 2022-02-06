@@ -1,6 +1,7 @@
 .NumberPicker {
   user-select: none;
 
+  font-size: 1.2em;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
 }

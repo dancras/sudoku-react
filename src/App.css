@@ -34,7 +34,6 @@ html:focus-within {
 
 /* Set core body defaults */
 body {
-  font-size: 64px;
   min-height: 100vh;
   text-rendering: optimizeSpeed;
   line-height: 1;
@@ -77,7 +76,19 @@ select {
 }
 
 /* App container */
-.SudokuReact {
+#root {
+  font-size: min(calc(80vh / 9), calc(100vw / 9));
+  height: 100vh;
   max-width: 80vh;
+}
+
+.SudokuReact {
+  touch-action: manipulation;
+
+  height: 100vh;
   margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
 }
