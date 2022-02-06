@@ -1,8 +1,13 @@
 import { act, render, screen } from '@testing-library/react';
 import { MockProxy, mock } from 'jest-mock-extended';
-import { useContext, memo } from 'react';
-import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer, GridContentsCell } from 'src/State/GridContents';
+import React, { useContext, memo, ReactNode, useState } from 'react';
+import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer, GridContentsCell, GridContents } from 'src/State/GridContents';
 import SudokuRules from 'src/Sudoku/SudokuRules';
+import { GameStateContext, Status } from 'src/State/GameState';
+
+function TestConsumer<T>({ Context, children }: { Context: React.Context<T>, children: (value: T) => ReactNode }) {
+    return <>{ children(useContext(Context)) }</>;
+}
 
 describe('updateGridContents', () => {
     let testRules: MockProxy<SudokuRules>;
@@ -178,6 +183,63 @@ test('the grid contents and a dispatch fn is shared via context', function () {
     });
 
     expect(screen.getByText('9')).toBeInTheDocument();
+});
+
+test('the grid contents are locked when GameState status is Started', function () {
+
+    const rules = mock<SudokuRules>();
+    rules.setContents.mockReturnValue([]);
+
+    let setGameStateStatus: (status: Status) => void = () => undefined as void;
+
+    function TestGameStateProvider({ children }: React.PropsWithChildren<unknown>) {
+        const [status, setStatus] = useState(Status.CanStart);
+        setGameStateStatus = setStatus;
+        return (
+            <GameStateContext.Provider value={{ rules, status, startGame: () => void(0) }}>
+                { children }
+            </GameStateContext.Provider>
+        );
+    }
+
+    const gridContentsSpy = jest.fn();
+    gridContentsSpy.mockReturnValue(<></>);
+
+    let dispatchGridContentsUpdate: GridContentsReducer[1] = () => undefined as void;
+
+    render(
+        <TestGameStateProvider>
+            <GridContentsProvider>
+                <TestConsumer Context={GridContentsContext}>
+                    {([gridContents, updateGridContents]) => {
+                        dispatchGridContentsUpdate = updateGridContents;
+                        return gridContentsSpy(gridContents);
+                    }}
+                </TestConsumer>
+            </GridContentsProvider>
+        </TestGameStateProvider>
+    );
+
+    act(() => {
+        dispatchGridContentsUpdate({
+            action: 'toggleContents',
+            cell: 0,
+            contents: 9
+        });
+
+        dispatchGridContentsUpdate({
+            action: 'toggleContents',
+            cell: 2,
+            contents: 4
+        });
+
+        setGameStateStatus(Status.Started);
+    });
+
+    const finalGridContents: GridContents = gridContentsSpy.mock.calls[gridContentsSpy.mock.calls.length - 1][0];
+
+    expect(finalGridContents[0].isLocked).toEqual(true);
+    expect(finalGridContents[2].isLocked).toEqual(true);
 });
 
 // This really only tests how immer and React.memo play together
