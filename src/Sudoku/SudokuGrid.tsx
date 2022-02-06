@@ -21,15 +21,20 @@ function Cell({ cell, i, dispatch, selectedNumberRef }: { cell: GridContentsCell
         });
     }
 
+    const [contents, isValid] = cell.contents === null ? [null, true] : cell.contents;
+
     return (
-        <div className={`--Cell ${cell.contents ? '-ShowingContents' : '-ShowingCandidates'}`} onClick={toggleCandidate} onDoubleClick={toggleContents}>
+        <div className={`--Cell ${contents ? `-ShowingContents ${isValid ? '-Valid' : '-Invalid'}` : '-ShowingCandidates'}`}
+             onClick={toggleCandidate}
+             onDoubleClick={toggleContents}
+        >
             <div className="--Candidates">
-                {Object.entries(cell.candidates).map(([i, isShowing]) =>
-                    <div key={i} className="--Candidate">{ isShowing ? i : ' ' }</div>
+                {Object.entries(cell.candidates).map(([i, isValid]) =>
+                    <div key={i} className={`--Candidate ${ isValid !== null ? (isValid ? '-Valid' : '-Invalid') : '' }`}>{ isValid !== null ? i : ' ' }</div>
                 )}
             </div>
             <div className="--Contents">
-                { cell.contents }
+                { contents }
             </div>
         </div>
     );

@@ -9,6 +9,10 @@
   border: 3px solid var(--black);
 }
 
+.SudokuGrid .-Invalid {
+  color: red;
+}
+
 .SudokuGrid .--Cell > div {
   flex: 1;
 }
