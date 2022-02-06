@@ -1,75 +1,113 @@
 import SudokuRules from 'src/Sudoku/SudokuRules';
 
 describe('setContents()', () => {
-    test('returns an empty array when no valid states change', () => {
-        const rules = new SudokuRules();
-
-        expect(rules.setContents(0, 5)[0]).toEqual([]);
-        expect(rules.setContents(1, 6)[0]).toEqual([]);
-        expect(rules.setContents(80, 2)[0]).toEqual([]);
-    });
-
-    test('returns an array containing cell indexes invalid cell indexes in the same row', () => {
-        const rules = new SudokuRules();
-
-        // 5 * * 5 * * 5 * *
-        expect(rules.setContents(0, 5)[0]).toEqual([]);
-        expect(rules.setContents(3, 5)[0]).toEqual([0, 3]);
-        expect(rules.setContents(6, 5)[0]).toEqual([0, 3, 6]);
-    });
-
-    test('returns an array containing cell indexes invalid cell indexes in the same column', () => {
-        const rules = new SudokuRules();
-
-        // 5
-        // *
-        // *
-        // 5
-        // *
-        // *
-        // 5
-        // *
-        // *
-        expect(rules.setContents(0, 5)[0]).toEqual([]);
-        expect(rules.setContents(27, 5)[0]).toEqual([0, 27]);
-        expect(rules.setContents(54, 5)[0]).toEqual([0, 27, 54]);
-    });
-
-    test('returns an array containing cell indexes invalid cell indexes in the same block', () => {
-        const rules = new SudokuRules();
-
-        // 5 * *
-        // * 5 *
-        // * * 5
-        expect(rules.setContents(0, 5)[0]).toEqual([]);
-        expect(rules.setContents(10, 5)[0]).toEqual([0, 10]);
-        expect(rules.setContents(20, 5)[0]).toEqual([0, 10, 20]);
-    });
-
-    test('de-duplicates any members that are invalid in row column and block', () => {
-        const rules = new SudokuRules();
-
-        // 5 * 5
-        // * * *
-        // 5 * 5
-        expect(rules.setContents(0, 5)[0]).toEqual([]);
-        expect(rules.setContents(2, 5)[0]).toEqual(expect.arrayContaining([0, 2]));
-        expect(rules.setContents(18, 5)[0]).toEqual(expect.arrayContaining([0, 2, 18]));
-        expect(rules.setContents(20, 5)[0]).toEqual(expect.arrayContaining([0, 2, 18, 20]));
-    });
-
     test('returns all connected cell indexes for the updated cell', () => {
         const rules = new SudokuRules();
 
-        expect(rules.setContents(0, 5)[1]).toEqual(expect.arrayContaining([
+        expect(rules.setContents(0, 5)).toEqual(expect.arrayContaining([
             0, 1, 2, 3, 4, 5, 6, 7, 8,
             9, 10, 11, 18, 19, 20,
             27, 36, 45, 54, 63, 72
         ]));
-        expect(rules.setContents(14, 9)[1]).toEqual(expect.arrayContaining([
+        expect(rules.setContents(14, 9)).toEqual(expect.arrayContaining([
             5, 9, 10, 11, 12, 13, 14, 15, 16, 17,
             23, 32, 41, 50, 59, 68, 77
         ]));
+    });
+});
+
+describe('isValidContents()', () => {
+
+    test('returns true or false depending on duplicate contents in the same row', () => {
+        const rules = new SudokuRules();
+
+        // 5 * * * * * * * *
+        rules.setContents(0, 5);
+        expect(rules.isValidContents(0)).toEqual(true);
+
+        // 5 * * 5 * * * * *
+        rules.setContents(3, 5);
+        expect(rules.isValidContents(0)).toEqual(false);
+        expect(rules.isValidContents(3)).toEqual(false);
+
+        // * * * 5 * * * * *
+        rules.setContents(0, null);
+        expect(rules.isValidContents(0)).toEqual(true);
+        expect(rules.isValidContents(3)).toEqual(true);
+
+        // * * * 5 * * 5 * *
+        rules.setContents(6, 5);
+        expect(rules.isValidContents(0)).toEqual(true);
+        expect(rules.isValidContents(3)).toEqual(false);
+        expect(rules.isValidContents(6)).toEqual(false);
+    });
+
+    test('returns true or false depending on duplicate contents in the same column', () => {
+        const rules = new SudokuRules();
+
+        // Comment visualisations are rotated 90 degrees
+        // 5 * * 5 * * * * *
+        rules.setContents(0, 5);
+        rules.setContents(27, 5);
+        expect(rules.isValidContents(0)).toEqual(false);
+        expect(rules.isValidContents(27)).toEqual(false);
+
+        // * * * 5 * * * * *
+        rules.setContents(0, null);
+        expect(rules.isValidContents(0)).toEqual(true);
+        expect(rules.isValidContents(27)).toEqual(true);
+
+        // * * * 5 * * 5 * *
+        rules.setContents(54, 5);
+        expect(rules.isValidContents(0)).toEqual(true);
+        expect(rules.isValidContents(27)).toEqual(false);
+        expect(rules.isValidContents(54)).toEqual(false);
+    });
+
+    test('returns true or false depending on duplicate contents in the same block', () => {
+        const rules = new SudokuRules();
+
+        // 5 * *
+        // * 5 *
+        // * * *
+        rules.setContents(0, 5);
+        rules.setContents(10, 5);
+        expect(rules.isValidContents(0)).toEqual(false);
+        expect(rules.isValidContents(10)).toEqual(false);
+
+        // * * *
+        // * 5 *
+        // * * *
+        rules.setContents(0, null);
+        expect(rules.isValidContents(0)).toEqual(true);
+        expect(rules.isValidContents(10)).toEqual(true);
+
+        // * * *
+        // * 5 *
+        // * * 5
+        rules.setContents(20, 5);
+        expect(rules.isValidContents(0)).toEqual(true);
+        expect(rules.isValidContents(10)).toEqual(false);
+        expect(rules.isValidContents(20)).toEqual(false);
+    });
+
+    test('continues returning false if another number is causing invalid state', () => {
+        const rules = new SudokuRules();
+
+        // 5 4 4
+        // * 5 *
+        // * * *
+        rules.setContents(0, 5);
+        rules.setContents(1, 4);
+        rules.setContents(2, 4);
+        rules.setContents(10, 5);
+        expect(rules.isValidContents(1)).toEqual(false);
+
+        // 5 4 4
+        // * * *
+        // * * *
+        rules.setContents(10, null);
+        expect(rules.isValidContents(1)).toEqual(false);
     });
 });
 
