@@ -50,7 +50,7 @@ function getBlockMembers(i: number) {
 }
 
 function emptyRecord<T>(length: number, startIndex: number, fill: (i: number) => T) {
-    return Array.from<void>({ length: 9 }).reduce((acc, x, i) => {
+    return Array.from<void>({ length: length }).reduce((acc, x, i) => {
         const j = startIndex + i;
         acc[j] = fill(j);
         return acc;
@@ -61,18 +61,37 @@ export default class SudokuRules {
 
     contents: Record<number, number | null>;
 
+    contentsCount: number;
+
     rowOccurrences: Record<number, Record<number, number>>;
 
     columnOccurrences: Record<number, Record<number, number>>;
 
     blockOccurrences: Record<number, Record<number, number>>;
 
+    excessOccurrences: number;
+
     constructor() {
         this.contents = emptyRecord(81, 0, () => null);
+
+        this.contentsCount = 0;
+        this.excessOccurrences = 0;
 
         this.rowOccurrences = emptyRecord(9, 0, () => emptyRecord(9, 1, () => 0));
         this.columnOccurrences = emptyRecord(9, 0, () => emptyRecord(9, 1, () => 0));
         this.blockOccurrences = emptyRecord(9, 0, () => emptyRecord(9, 1, () => 0));
+    }
+
+    isEmpty() {
+        return this.contentsCount === 0;
+    }
+
+    isValid() {
+        return this.excessOccurrences === 0;
+    }
+
+    isComplete() {
+        return this.contentsCount == 81 && this.isValid();
     }
 
     isValidCandidate(i: number, candidate: number): boolean {
@@ -105,8 +124,32 @@ export default class SudokuRules {
         ) === 1;
     }
 
+    /**
+     * All modifications to row/column/block occurrences must be done with these to keep track of status
+     */
+    #increaseOccurrences(occurrences: Record<number, number>, contents: number) {
+        occurrences[contents]++;
+
+        if (occurrences[contents] > 1) {
+            this.excessOccurrences++;
+        }
+    }
+
+    #decreaseOccurrences(occurrences: Record<number, number>, contents: number) {
+        occurrences[contents]--;
+
+        if (occurrences[contents] > 0) {
+            this.excessOccurrences--;
+        }
+    }
+
     setContents(i: number, contents: number | null): number[] {
         const previousContents = this.contents[i];
+
+        // Our use cases don't expect this to happen and supporting it requires more logic
+        if (previousContents === contents) {
+            throw new Error('SudokuRules.setContents called with existing contents unexpectedly');
+        }
 
         this.contents[i] = contents;
 
@@ -115,15 +158,19 @@ export default class SudokuRules {
         const blockIndex = getBlockIndex(i);
 
         if (previousContents !== null) {
-            this.rowOccurrences[rowIndex][previousContents] -= 1;
-            this.columnOccurrences[columnIndex][previousContents] -= 1;
-            this.blockOccurrences[blockIndex][previousContents] -= 1;
+            this.#decreaseOccurrences(this.rowOccurrences[rowIndex], previousContents);
+            this.#decreaseOccurrences(this.columnOccurrences[columnIndex], previousContents);
+            this.#decreaseOccurrences(this.blockOccurrences[blockIndex], previousContents);
+        } else {
+            this.contentsCount++;
         }
 
         if (contents !== null) {
-            this.rowOccurrences[rowIndex][contents] += 1;
-            this.columnOccurrences[columnIndex][contents] += 1;
-            this.blockOccurrences[blockIndex][contents] += 1;
+            this.#increaseOccurrences(this.rowOccurrences[rowIndex], contents);
+            this.#increaseOccurrences(this.columnOccurrences[columnIndex], contents);
+            this.#increaseOccurrences(this.blockOccurrences[blockIndex], contents);
+        } else {
+            this.contentsCount--;
         }
 
         const rowMembers = getRowMembers(i);

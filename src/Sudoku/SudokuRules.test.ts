@@ -14,6 +14,123 @@ describe('setContents()', () => {
             23, 32, 41, 50, 59, 68, 77
         ]));
     });
+
+    test('throws error if new contents matches existing', () => {
+        const rules = new SudokuRules();
+        rules.setContents(0, 5);
+        expect(() => rules.setContents(0, 5)).toThrowError();
+    });
+});
+
+describe('isEmpty()', () => {
+    test('returns false when it has any contents', () => {
+        const rules = new SudokuRules();
+
+        expect(rules.isEmpty()).toEqual(true);
+
+        rules.setContents(0, 1);
+        expect(rules.isEmpty()).toEqual(false);
+
+        rules.setContents(50, 4);
+        expect(rules.isEmpty()).toEqual(false);
+
+        rules.setContents(0, null);
+        expect(rules.isEmpty()).toEqual(false);
+
+        rules.setContents(50, null);
+        expect(rules.isEmpty()).toEqual(true);
+    });
+});
+
+describe('isValid()', () => {
+    test('returns true when no row, column or block has more than 1 of a number', () => {
+        const rules = new SudokuRules();
+
+        expect(rules.isValid()).toEqual(true);
+
+        // 1 2 * * * * * * *
+        // * * * 1 * * 2 * *
+        // * *
+        // * 1
+        rules.setContents(0, 1);
+        rules.setContents(0, 2);
+        rules.setContents(12, 1);
+        rules.setContents(15, 2);
+        rules.setContents(28, 1);
+        expect(rules.isValid()).toEqual(true);
+    });
+
+    test('returns false when row, column or block has more than 1 of a number', () => {
+        const rules = new SudokuRules();
+
+        // 1 * * 1 * * * * *
+        rules.setContents(0, 1);
+        rules.setContents(3, 1);
+        expect(rules.isValid()).toEqual(false);
+
+        // 1 * * * * * * * *
+        rules.setContents(3, null);
+        expect(rules.isValid()).toEqual(true);
+
+        // 1 * * * * * * * *
+        // 1 * *
+        rules.setContents(9, 1);
+        expect(rules.isValid()).toEqual(false);
+
+        // 1 2 * * * * * * *
+        // 2 * *
+        rules.setContents(1, 2);
+        rules.setContents(9, 2);
+        expect(rules.isValid()).toEqual(false);
+
+        // 1 * * * * * * * *
+        // 2 * *
+        rules.setContents(1, null);
+        expect(rules.isValid()).toEqual(true);
+    });
+});
+
+describe('isComplete()', () => {
+    test('returns true for a complete valid grid only', () => {
+        const rules = new SudokuRules();
+
+        const solutionText = `
+483921657
+967345821
+251876493
+548132976
+729564138
+136798245
+372689514
+814253769
+695417382`;
+
+        let i = 0;
+        solutionText.trim().split('\n').forEach(line => {
+            const row = line.trim().split('');
+            row.forEach(cell => {
+                rules.setContents(i, parseInt(cell));
+                i++;
+            });
+        });
+
+        expect(rules.isComplete()).toEqual(true);
+
+        rules.setContents(0, 5);
+        expect(rules.isComplete()).toEqual(false);
+
+        rules.setContents(0, 4);
+        expect(rules.isComplete()).toEqual(true);
+
+        rules.setContents(26, null);
+        expect(rules.isComplete()).toEqual(false);
+
+        rules.setContents(26, 3);
+        expect(rules.isComplete()).toEqual(true);
+
+        rules.setContents(80, 3);
+        expect(rules.isComplete()).toEqual(false);
+    });
 });
 
 describe('isValidContents()', () => {
