@@ -143,13 +143,11 @@ export default class SudokuRules {
         }
     }
 
+    /**
+     * This function MUST be idempotent as it may be called multiple times with duplicate values
+     */
     setContents(i: number, contents: number | null): number[] {
         const previousContents = this.contents[i];
-
-        // Our use cases don't expect this to happen and supporting it requires more logic
-        if (previousContents === contents) {
-            throw new Error('SudokuRules.setContents called with existing contents unexpectedly');
-        }
 
         this.contents[i] = contents;
 

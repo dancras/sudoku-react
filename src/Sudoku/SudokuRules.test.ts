@@ -15,10 +15,27 @@ describe('setContents()', () => {
         ]));
     });
 
-    test('throws error if new contents matches existing', () => {
+    test('will not change anything if contents is set to the same value', () => {
         const rules = new SudokuRules();
         rules.setContents(0, 5);
-        expect(() => rules.setContents(0, 5)).toThrowError();
+
+        const state1 = JSON.stringify(rules);
+
+        expect(rules.setContents(0, 5)).toEqual(expect.arrayContaining([
+            0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 11, 18, 19, 20,
+            27, 36, 45, 54, 63, 72
+        ]));
+
+        expect(JSON.stringify(rules)).toEqual(state1);
+
+        rules.setContents(0, null);
+
+        const state2 = JSON.stringify(rules);
+
+        rules.setContents(0, null);
+
+        expect(JSON.stringify(rules)).toEqual(state2);
     });
 });
 

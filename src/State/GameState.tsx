@@ -11,17 +11,19 @@ export enum Status {
 export type GameState = {
     status: Status,
     rules: SudokuRules,
-    startGame: () => void
+    startGame: () => void,
+    notifyContentsChange: () => void
 };
 
 export const GameStateContext = createContext<GameState>({
     status: Status.InvalidGrid,
     rules: new SudokuRules(),
-    startGame: () => void(0)
+    startGame: () => void(0),
+    notifyContentsChange: () => void(0)
 });
 
 export function GameStateProvider({ children, rulesFactory }: React.PropsWithChildren<{
-    rulesFactory: (onContentsChange: () => void) => SudokuRules
+    rulesFactory: () => SudokuRules
 }>) {
     const [status, setStatus] = useReducer((currentStatus: Status, nextStatus: Status) => {
 
@@ -29,31 +31,33 @@ export function GameStateProvider({ children, rulesFactory }: React.PropsWithChi
             return nextStatus;
         }
 
-        if (nextStatus === Status.CanStart && currentStatus === Status.Started) {
+        if ((nextStatus === Status.InvalidGrid || nextStatus === Status.CanStart) && currentStatus === Status.Started) {
             return currentStatus;
         }
 
         return nextStatus;
     }, Status.InvalidGrid);
 
-    const rules = useMemo(() =>
-        rulesFactory(() => {
-            if (rules.isEmpty()) {
-                setStatus(Status.InvalidGrid);
-            } else if (rules.isComplete()) {
-                setStatus(Status.Complete);
-            } else if (rules.isValid()) {
-                setStatus(Status.CanStart);
-            }
-        }), []
-    );
+    const rules = useMemo(() => rulesFactory(), []);
+
+    const notifyContentsChange = useCallback(() => {
+        if (rules.isEmpty()) {
+            setStatus(Status.InvalidGrid);
+        } else if (rules.isComplete()) {
+            setStatus(Status.Complete);
+        } else if (rules.isValid()) {
+            setStatus(Status.CanStart);
+        } else {
+            setStatus(Status.InvalidGrid);
+        }
+    }, []);
 
     const startGame = useCallback(() => {
         setStatus(Status.Started);
     }, []);
 
     return (
-        <GameStateContext.Provider value={{ status, rules, startGame }}>
+        <GameStateContext.Provider value={{ status, rules, startGame, notifyContentsChange }}>
             {children}
         </GameStateContext.Provider>
     );

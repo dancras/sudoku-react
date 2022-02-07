@@ -95,7 +95,7 @@ export function updateGridContents(rules: SudokuRules, currentState: GridContent
 }
 
 export function GridContentsProvider({ children }: React.PropsWithChildren<unknown>) {
-    const { rules, status } = useContext(GameStateContext);
+    const { rules, status, notifyContentsChange } = useContext(GameStateContext);
     const gridContentsReducer = useReducer((state: GridContents, update: GridContentsUpdate) => updateGridContents(rules, state, update), emptyGridContents());
 
     useEffect(() => {
@@ -105,6 +105,10 @@ export function GridContentsProvider({ children }: React.PropsWithChildren<unkno
             });
         }
     }, [status]);
+
+    useEffect(() => {
+        notifyContentsChange();
+    }, [gridContentsReducer[0]]);
 
     return (
         <GridContentsContext.Provider value={gridContentsReducer}>

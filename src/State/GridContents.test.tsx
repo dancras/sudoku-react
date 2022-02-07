@@ -1,13 +1,10 @@
 import { act, render } from '@testing-library/react';
 import { MockProxy, mock } from 'jest-mock-extended';
-import React, { useContext, ReactNode, useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer, GridContents } from 'src/State/GridContents';
 import SudokuRules from 'src/Sudoku/SudokuRules';
-import { GameStateContext, Status } from 'src/State/GameState';
-
-function TestConsumer<T>({ Context, children }: { Context: React.Context<T>, children: (value: T) => ReactNode }) {
-    return <>{ children(useContext(Context)) }</>;
-}
+import { GameState, GameStateContext, Status } from 'src/State/GameState';
+import { createTestConsumer, createTestProvider } from 'src/Test/TestContext';
 
 describe('updateGridContents', () => {
     let testRules: MockProxy<SudokuRules>;
@@ -161,77 +158,104 @@ describe('updateGridContents', () => {
 
 describe('GridContentsProvider', () => {
 
+    let TestConsumer: React.FunctionComponent;
+    let readContext: () => GridContentsReducer;
+
+    let TestGameStateProvider: React.FunctionComponent;
+    let setGameStateContext: (value: GameState) => void;
+
     let rules: MockProxy<SudokuRules>;
-    let dispatchGridContentsUpdate: GridContentsReducer[1] = () => undefined as void;
-    let gridContentsSpy: jest.MockedFunction<(gridContents: GridContents) => ReactNode>;
-    let setGameStateStatus: (status: Status) => void = () => undefined as void;
+    let notifyContentsChange: jest.MockedFunction<() => void>;
+
+    function createGameState(status: Status) {
+        return {
+            status,
+            rules,
+            startGame: () => void(0),
+            notifyContentsChange
+        };
+    }
 
     beforeEach(() => {
+        [TestConsumer, readContext] = createTestConsumer(GridContentsContext);
+
         rules = mock<SudokuRules>();
         rules.setContents.mockReturnValue([]);
+        notifyContentsChange = jest.fn();
 
-        function TestGameStateProvider({ children }: React.PropsWithChildren<unknown>) {
-            const [status, setStatus] = useState(Status.CanStart);
-            setGameStateStatus = setStatus;
-            return (
-                <GameStateContext.Provider value={{ rules, status, startGame: () => void(0) }}>
-                    { children }
-                </GameStateContext.Provider>
-            );
-        }
+        [TestGameStateProvider, setGameStateContext] = createTestProvider(GameStateContext, createGameState(Status.InvalidGrid));
 
-        gridContentsSpy = jest.fn();
-        gridContentsSpy.mockReturnValue(<></>);
+        // function TestGameStateProvider({ children }: React.PropsWithChildren<unknown>) {
+        //     const [status, setStatus] = useState(Status.CanStart);
+        //     setGameStateStatus = setStatus;
+        //     return (
+        //         <GameStateContext.Provider value={{ rules, status, startGame: () => void(0), notifyContentsChange: () => void(0) }}>
+        //             { children }
+        //         </GameStateContext.Provider>
+        //     );
+        // }
 
         render(
             <TestGameStateProvider>
                 <GridContentsProvider>
-                    <TestConsumer Context={GridContentsContext}>
-                        {([gridContents, updateGridContents]) => {
-                            dispatchGridContentsUpdate = updateGridContents;
-                            return gridContentsSpy(gridContents);
-                        }}
-                    </TestConsumer>
+                    <TestConsumer></TestConsumer>
                 </GridContentsProvider>
             </TestGameStateProvider>
         );
     });
 
     test('the grid contents and a dispatch fn is shared via context', function () {
+        const [,dispatch] = readContext();
 
         act(() => {
-            dispatchGridContentsUpdate({
+            dispatch({
                 action: 'toggleContents',
                 cell: 0,
                 contents: 9
             });
         });
 
-        const gridContents: GridContents = gridContentsSpy.mock.calls[1][0];
+        const [gridContents] = readContext();
+
         expect(gridContents[0].contents?.[0]).toEqual(9);
     });
 
     test('the grid contents are locked when GameState status is Started', function () {
+        const [,dispatch] = readContext();
 
         act(() => {
-            dispatchGridContentsUpdate({
+            dispatch({
                 action: 'toggleContents',
                 cell: 0,
                 contents: 9
             });
 
-            dispatchGridContentsUpdate({
+            dispatch({
                 action: 'toggleContents',
                 cell: 2,
                 contents: 4
             });
 
-            setGameStateStatus(Status.Started);
+            setGameStateContext(createGameState(Status.Started));
         });
 
-        const finalGridContents: GridContents = gridContentsSpy.mock.calls[gridContentsSpy.mock.calls.length - 1][0];
+        const [gridContents] = readContext();
 
-        expect(finalGridContents[0].isLocked).toEqual(true);
-        expect(finalGridContents[2].isLocked).toEqual(true);
+        expect(gridContents[0].isLocked).toEqual(true);
+        expect(gridContents[2].isLocked).toEqual(true);
+    });
+
+    test('GameState is notified when the grid contents change', function () {
+        const [,dispatch] = readContext();
+
+        act(() => {
+            dispatch({
+                action: 'toggleContents',
+                cell: 0,
+                contents: 9
+            });
+        });
+
+        expect(notifyContentsChange).toHaveBeenCalled();
     });
 });
