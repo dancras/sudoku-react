@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { mock } from 'jest-mock-extended';
+import { mock, MockProxy } from 'jest-mock-extended';
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { GameStateProvider, GameStateContext, Status, GameState } from 'src/State/GameState';
@@ -8,33 +8,24 @@ import { createTestConsumer } from 'src/Test/TestContext';
 
 let TestConsumer: React.FunctionComponent;
 let readContext: () => GameState;
+let rules: MockProxy<SudokuRules>;
 
 beforeEach(() => {
     [TestConsumer, readContext] = createTestConsumer(GameStateContext);
-});
-
-test('it passes rules by context', () => {
-    const expectedRules = new SudokuRules();
-
-    render(
-        <GameStateProvider rulesFactory={() => expectedRules}>
-            <TestConsumer></TestConsumer>
-        </GameStateProvider>
-    );
-
-    const { rules } = readContext();
-    expect(rules).toEqual(expectedRules);
-});
-
-test('it sets status to InvalidGrid if grid is empty after change', () => {
-    const rules = mock<SudokuRules>();
+    rules = mock<SudokuRules>();
 
     render(
         <GameStateProvider rulesFactory={() => rules}>
             <TestConsumer></TestConsumer>
         </GameStateProvider>
     );
+});
 
+test('it passes rules by context', () => {
+    expect(readContext().rules).toEqual(rules);
+});
+
+test('it sets status to InvalidGrid if grid is empty after change', () => {
     const { notifyContentsChange } = readContext();
     rules.isEmpty.mockReturnValue(true);
 
@@ -48,14 +39,6 @@ test('it sets status to InvalidGrid if grid is empty after change', () => {
 });
 
 test('it sets status to CanStart if not empty and is valid', () => {
-    const rules = mock<SudokuRules>();
-
-    render(
-        <GameStateProvider rulesFactory={() => rules}>
-            <TestConsumer></TestConsumer>
-        </GameStateProvider>
-    );
-
     const { notifyContentsChange } = readContext();
     rules.isEmpty.mockReturnValue(false);
     rules.isValid.mockReturnValue(true);
@@ -70,14 +53,6 @@ test('it sets status to CanStart if not empty and is valid', () => {
 });
 
 test('it reverts back to InvalidGrid if no longer valid on next change', () => {
-    const rules = mock<SudokuRules>();
-
-    render(
-        <GameStateProvider rulesFactory={() => rules}>
-            <TestConsumer></TestConsumer>
-        </GameStateProvider>
-    );
-
     const { notifyContentsChange } = readContext();
     rules.isEmpty.mockReturnValue(false);
     rules.isValid.mockReturnValue(true);
@@ -98,14 +73,6 @@ test('it reverts back to InvalidGrid if no longer valid on next change', () => {
 });
 
 test('it sets status to Complete if rules say its complete', () => {
-    const rules = mock<SudokuRules>();
-
-    render(
-        <GameStateProvider rulesFactory={() => rules}>
-            <TestConsumer></TestConsumer>
-        </GameStateProvider>
-    );
-
     const { notifyContentsChange } = readContext();
     rules.isValid.mockReturnValue(true);
     rules.isComplete.mockReturnValue(true);
@@ -120,14 +87,6 @@ test('it sets status to Complete if rules say its complete', () => {
 });
 
 test('it sets status to Started and locks grid contents if the start function is called and status is CanStart', () => {
-    const rules = mock<SudokuRules>();
-
-    render(
-        <GameStateProvider rulesFactory={() => rules}>
-            <TestConsumer></TestConsumer>
-        </GameStateProvider>
-    );
-
     const { notifyContentsChange, startGame } = readContext();
     rules.isValid.mockReturnValue(true);
 

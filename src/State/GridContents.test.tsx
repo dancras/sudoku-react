@@ -1,7 +1,7 @@
 import { act, render } from '@testing-library/react';
 import { MockProxy, mock } from 'jest-mock-extended';
-import React, { ReactNode, useState } from 'react';
-import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer, GridContents } from 'src/State/GridContents';
+import React from 'react';
+import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer } from 'src/State/GridContents';
 import SudokuRules from 'src/Sudoku/SudokuRules';
 import { GameState, GameStateContext, Status } from 'src/State/GameState';
 import { createTestConsumer, createTestProvider } from 'src/Test/TestContext';

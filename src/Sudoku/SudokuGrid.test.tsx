@@ -2,29 +2,32 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import produce from 'immer';
 import { emptyGridContents, GridContents, GridContentsContext, GridContentsProvider, GridContentsReducer, GridContentsUpdate } from 'src/State/GridContents';
-import { SelectedNumberContext, SelectedNumberProvider } from 'src/State/SelectedNumber';
+import { SelectedNumberContext, SelectedNumberProvider, SelectedNumberState } from 'src/State/SelectedNumber';
 import SudokuGrid from 'src/Sudoku/SudokuGrid';
-import { createTestProvider } from 'src/Test/TestProvider';
+import { createTestProvider } from 'src/Test/TestContext';
 
 let gridContents: GridContents;
 let TestGridContentsProvider: typeof GridContentsProvider;
+let setGridContentsContext: (value: GridContentsReducer) => void;
 let gridContentsDispatchSpy: jest.MockedFunction<GridContentsReducer[1]>;
-let setGridContents: (value: GridContents) => void;
 
 let TestSelectedNumberProvider: typeof SelectedNumberProvider;
-let setSelectedNumber: (value: number) => void;
+let setSelectedNumberContext: (value: SelectedNumberState) => void;
+
+function setGridContents(value: GridContents) {
+    setGridContentsContext([value, gridContentsDispatchSpy]);
+}
 
 beforeEach(() => {
     gridContents = emptyGridContents();
+    gridContentsDispatchSpy = jest.fn();
 
-    [TestGridContentsProvider, gridContentsDispatchSpy, setGridContents] = createTestProvider(
-        GridContentsContext,
-        gridContents
+    [TestGridContentsProvider, setGridContentsContext] = createTestProvider(
+        GridContentsContext, [gridContents, gridContentsDispatchSpy]
     );
 
-    [TestSelectedNumberProvider, /* */, setSelectedNumber] = createTestProvider(
-        SelectedNumberContext,
-        1
+    [TestSelectedNumberProvider, setSelectedNumberContext] = createTestProvider(
+        SelectedNumberContext, [1, jest.fn()]
     );
 
     render(
@@ -65,7 +68,7 @@ test('cell has -ShowingContents class when it has contents to show', () => {
 test('dispatches toggleContents on double click', () => {
     const firstCell = screen.getByTestId('sudoku-grid').firstElementChild;
 
-    setSelectedNumber(4);
+    setSelectedNumberContext([4, jest.fn()]);
 
     firstCell && userEvent.dblClick(firstCell);
 
@@ -149,7 +152,7 @@ test('candidate has -Valid or -Invalid class depending on state', () => {
 test('dispatches toggleCandidate on single click', () => {
     const firstCell = screen.getByTestId('sudoku-grid').firstElementChild;
 
-    setSelectedNumber(7);
+    setSelectedNumberContext([7, jest.fn()]);
 
     firstCell && userEvent.click(firstCell);
 

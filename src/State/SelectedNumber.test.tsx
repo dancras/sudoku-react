@@ -1,27 +1,23 @@
-import { act, render, screen } from '@testing-library/react';
-import { useContext } from 'react';
-import { SelectedNumberContext, SelectedNumberProvider, SelectedNumberState } from 'src/State/SelectedNumber';
+import { act, render } from '@testing-library/react';
+import { SelectedNumberContext, SelectedNumberProvider } from 'src/State/SelectedNumber';
+import { createTestConsumer } from 'src/Test/TestContext';
 
 test('the selected number is shared via a context', function () {
-    let setSelectedNumber: SelectedNumberState[1] = () => undefined as void;
-
-    function ExampleConsumer() {
-        const [selectedNumber, setter] = useContext(SelectedNumberContext);
-        setSelectedNumber = setter;
-        return <div>{selectedNumber}</div>;
-    }
+    const [TestConsumer, readContext] = createTestConsumer(SelectedNumberContext);
 
     render(
         <SelectedNumberProvider>
-            <ExampleConsumer />
+            <TestConsumer />
         </SelectedNumberProvider>
     );
 
-    expect(screen.getByText('1')).toBeInTheDocument();
+    const [initialSelectedNumber, setSelectedNumber] = readContext();
+    expect(initialSelectedNumber).toEqual(1);
 
     act(() => {
         setSelectedNumber(3);
     });
 
-    expect(screen.getByText('3')).toBeInTheDocument();
+    const [selectedNumber] = readContext();
+    expect(selectedNumber).toEqual(3);
 });
