@@ -1,7 +1,7 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { MockProxy, mock } from 'jest-mock-extended';
-import React, { useContext, memo, ReactNode, useState } from 'react';
-import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer, GridContentsCell, GridContents } from 'src/State/GridContents';
+import React, { useContext, ReactNode, useState } from 'react';
+import { emptyGridContents, updateGridContents, GridContentsProvider, GridContentsContext, GridContentsReducer, GridContents } from 'src/State/GridContents';
 import SudokuRules from 'src/Sudoku/SudokuRules';
 import { GameStateContext, Status } from 'src/State/GameState';
 
@@ -159,128 +159,79 @@ describe('updateGridContents', () => {
     });
 });
 
-test('the grid contents and a dispatch fn is shared via context', function () {
+describe('GridContentsProvider', () => {
+
+    let rules: MockProxy<SudokuRules>;
     let dispatchGridContentsUpdate: GridContentsReducer[1] = () => undefined as void;
-
-    function ExampleConsumer() {
-        const [gridContents, dispatch] = useContext(GridContentsContext);
-        dispatchGridContentsUpdate = dispatch;
-        return <div>{gridContents[0].contents?.[0]}</div>;
-    }
-
-    render(
-        <GridContentsProvider>
-            <ExampleConsumer />
-        </GridContentsProvider>
-    );
-
-    act(() => {
-        dispatchGridContentsUpdate({
-            action: 'toggleContents',
-            cell: 0,
-            contents: 9
-        });
-    });
-
-    expect(screen.getByText('9')).toBeInTheDocument();
-});
-
-test('the grid contents are locked when GameState status is Started', function () {
-
-    const rules = mock<SudokuRules>();
-    rules.setContents.mockReturnValue([]);
-
+    let gridContentsSpy: jest.MockedFunction<(gridContents: GridContents) => ReactNode>;
     let setGameStateStatus: (status: Status) => void = () => undefined as void;
 
-    function TestGameStateProvider({ children }: React.PropsWithChildren<unknown>) {
-        const [status, setStatus] = useState(Status.CanStart);
-        setGameStateStatus = setStatus;
-        return (
-            <GameStateContext.Provider value={{ rules, status, startGame: () => void(0) }}>
-                { children }
-            </GameStateContext.Provider>
+    beforeEach(() => {
+        rules = mock<SudokuRules>();
+        rules.setContents.mockReturnValue([]);
+
+        function TestGameStateProvider({ children }: React.PropsWithChildren<unknown>) {
+            const [status, setStatus] = useState(Status.CanStart);
+            setGameStateStatus = setStatus;
+            return (
+                <GameStateContext.Provider value={{ rules, status, startGame: () => void(0) }}>
+                    { children }
+                </GameStateContext.Provider>
+            );
+        }
+
+        gridContentsSpy = jest.fn();
+        gridContentsSpy.mockReturnValue(<></>);
+
+        render(
+            <TestGameStateProvider>
+                <GridContentsProvider>
+                    <TestConsumer Context={GridContentsContext}>
+                        {([gridContents, updateGridContents]) => {
+                            dispatchGridContentsUpdate = updateGridContents;
+                            return gridContentsSpy(gridContents);
+                        }}
+                    </TestConsumer>
+                </GridContentsProvider>
+            </TestGameStateProvider>
         );
-    }
-
-    const gridContentsSpy = jest.fn();
-    gridContentsSpy.mockReturnValue(<></>);
-
-    let dispatchGridContentsUpdate: GridContentsReducer[1] = () => undefined as void;
-
-    render(
-        <TestGameStateProvider>
-            <GridContentsProvider>
-                <TestConsumer Context={GridContentsContext}>
-                    {([gridContents, updateGridContents]) => {
-                        dispatchGridContentsUpdate = updateGridContents;
-                        return gridContentsSpy(gridContents);
-                    }}
-                </TestConsumer>
-            </GridContentsProvider>
-        </TestGameStateProvider>
-    );
-
-    act(() => {
-        dispatchGridContentsUpdate({
-            action: 'toggleContents',
-            cell: 0,
-            contents: 9
-        });
-
-        dispatchGridContentsUpdate({
-            action: 'toggleContents',
-            cell: 2,
-            contents: 4
-        });
-
-        setGameStateStatus(Status.Started);
     });
 
-    const finalGridContents: GridContents = gridContentsSpy.mock.calls[gridContentsSpy.mock.calls.length - 1][0];
+    test('the grid contents and a dispatch fn is shared via context', function () {
 
-    expect(finalGridContents[0].isLocked).toEqual(true);
-    expect(finalGridContents[2].isLocked).toEqual(true);
-});
-
-// This really only tests how immer and React.memo play together
-test('consumers of individual cell data do not re-render for unrelated changes', function () {
-    let dispatchGridContentsUpdate: GridContentsReducer[1] = () => undefined as void;
-    const renderSpy = jest.fn();
-
-    function CellConsumer({ cell }: { cell: GridContentsCell }) {
-        renderSpy(cell.contents?.[0]);
-        return <div>{cell.contents?.[0]}</div>;
-    }
-
-    const MemoizedCellConsumer = memo(CellConsumer);
-
-    function ExampleConsumer() {
-        const [gridContents, dispatch] = useContext(GridContentsContext);
-        dispatchGridContentsUpdate = dispatch;
-        return (
-            <>
-                <MemoizedCellConsumer cell={gridContents[0]} />
-                <MemoizedCellConsumer cell={gridContents[1]} />
-            </>
-        );
-    }
-
-    render(
-        <GridContentsProvider>
-            <ExampleConsumer />
-        </GridContentsProvider>
-    );
-
-    renderSpy.mockClear();
-
-    act(() => {
-        dispatchGridContentsUpdate({
-            action: 'toggleContents',
-            cell: 0,
-            contents: 9
+        act(() => {
+            dispatchGridContentsUpdate({
+                action: 'toggleContents',
+                cell: 0,
+                contents: 9
+            });
         });
+
+        const gridContents: GridContents = gridContentsSpy.mock.calls[1][0];
+        expect(gridContents[0].contents?.[0]).toEqual(9);
     });
 
-    expect(renderSpy).toHaveBeenCalledTimes(1);
-    expect(renderSpy).toHaveBeenCalledWith(9);
+    test('the grid contents are locked when GameState status is Started', function () {
+
+        act(() => {
+            dispatchGridContentsUpdate({
+                action: 'toggleContents',
+                cell: 0,
+                contents: 9
+            });
+
+            dispatchGridContentsUpdate({
+                action: 'toggleContents',
+                cell: 2,
+                contents: 4
+            });
+
+            setGameStateStatus(Status.Started);
+        });
+
+        const finalGridContents: GridContents = gridContentsSpy.mock.calls[gridContentsSpy.mock.calls.length - 1][0];
+
+        expect(finalGridContents[0].isLocked).toEqual(true);
+        expect(finalGridContents[2].isLocked).toEqual(true);
+    });
 });
