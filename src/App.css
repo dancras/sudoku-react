@@ -17,3 +17,7 @@
   flex-direction: column;
   justify-content: space-evenly;
 }
+
+.ButtonBar {
+  text-align: center;
+}

@@ -2,14 +2,21 @@ import 'src/Sudoku/SudokuGrid.css';
 import { memo, useContext, useRef } from 'react';
 import { GridContentsCell, GridContentsContext, GridContentsReducer } from 'src/State/GridContents';
 import { SelectedNumberContext } from 'src/State/SelectedNumber';
+import { GameStateContext, Status } from 'src/State/GameState';
 
-function Cell({ cell, i, dispatch, selectedNumberRef }: { cell: GridContentsCell, i: number, dispatch: GridContentsReducer[1], selectedNumberRef: React.MutableRefObject<number> }) {
+// Values we need to use in cell events but don't want to cause re-renders
+type ContextInfo = React.MutableRefObject<{
+    status: Status,
+    selectedNumber: number
+}>;
+
+function Cell({ cell, i, dispatch, contextInfo }: { cell: GridContentsCell, i: number, dispatch: GridContentsReducer[1], contextInfo: ContextInfo }) {
 
     function toggleContents() {
         dispatch({
             action: 'toggleContents',
             cell: i,
-            contents: selectedNumberRef.current
+            contents: contextInfo.current.selectedNumber
         });
     }
 
@@ -17,16 +24,32 @@ function Cell({ cell, i, dispatch, selectedNumberRef }: { cell: GridContentsCell
         dispatch({
             action: 'toggleCandidate',
             cell: i,
-            candidate: selectedNumberRef.current
+            candidate: contextInfo.current.selectedNumber
         });
+    }
+
+    function handleClick() {
+        if (cell.isLocked) {
+            return;
+        } else if (contextInfo.current.status === Status.Started) {
+            toggleCandidate();
+        } else if (contextInfo.current.status !== Status.Complete) {
+            toggleContents();
+        }
+    }
+
+    function handleDoubleClick() {
+        if (!cell.isLocked && contextInfo.current.status === Status.Started) {
+            toggleContents();
+        }
     }
 
     const [contents, isValid] = cell.contents === null ? [null, true] : cell.contents;
 
     return (
-        <div className={`--Cell ${contents ? `-ShowingContents ${isValid ? '-Valid' : '-Invalid'}` : '-ShowingCandidates'}`}
-             onClick={toggleCandidate}
-             onDoubleClick={toggleContents}
+        <div className={`--Cell ${cell.isLocked ? '-Locked' : ''} ${contents ? `-ShowingContents ${isValid ? '-Valid' : '-Invalid'}` : '-ShowingCandidates'}`}
+             onClick={handleClick}
+             onDoubleClick={handleDoubleClick}
         >
             <div className="--Candidates">
                 {Object.entries(cell.candidates).map(([i, isValid]) =>
@@ -45,13 +68,14 @@ const MemoizedCell = memo(Cell);
 export default function SudokuGrid() {
     const [gridContents, dispatchGridContentsUpdate] = useContext(GridContentsContext);
     const [selectedNumber] = useContext(SelectedNumberContext);
-    const selectedNumberRef = useRef(selectedNumber);
-    selectedNumberRef.current = selectedNumber;
+    const { status } = useContext(GameStateContext);
+    const contextInfo: ContextInfo = useRef({ selectedNumber, status });
+    contextInfo.current = { selectedNumber, status };
 
     return (
         <div className="SudokuGrid" data-testid="sudoku-grid">
             {gridContents.map((cell, i) =>
-                <MemoizedCell key={i} cell={cell} i={i} dispatch={dispatchGridContentsUpdate} selectedNumberRef={selectedNumberRef} />
+                <MemoizedCell key={i} cell={cell} i={i} dispatch={dispatchGridContentsUpdate} contextInfo={contextInfo} />
             )}
         </div>
     );
