@@ -185,16 +185,6 @@ describe('GridContentsProvider', () => {
 
         [TestGameStateProvider, setGameStateContext] = createTestProvider(GameStateContext, createGameState(Status.InvalidGrid));
 
-        // function TestGameStateProvider({ children }: React.PropsWithChildren<unknown>) {
-        //     const [status, setStatus] = useState(Status.CanStart);
-        //     setGameStateStatus = setStatus;
-        //     return (
-        //         <GameStateContext.Provider value={{ rules, status, startGame: () => void(0), notifyContentsChange: () => void(0) }}>
-        //             { children }
-        //         </GameStateContext.Provider>
-        //     );
-        // }
-
         render(
             <TestGameStateProvider>
                 <GridContentsProvider>
